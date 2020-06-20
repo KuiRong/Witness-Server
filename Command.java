@@ -348,8 +348,9 @@ public class Command {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 		buffer.clear();
-		WitnessReceiver.header.clear();
+		
 		if (nodeId == 1111) {
 //				logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
 			CServer.nodeOneSendCount++;

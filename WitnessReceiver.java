@@ -27,7 +27,7 @@ public class WitnessReceiver extends Thread {
 //	private Socket socket;
 	private AsynchronousSocketChannel clientsocket = null;
 //	private byte[] header;
-	static ByteBuffer header;
+	private ByteBuffer header;
 	private byte[] buffer;
 	public byte[] data;
 	
@@ -76,15 +76,25 @@ public class WitnessReceiver extends Thread {
 //			header = buffer;
 			while(true)
 			{
+				count = 0;
 				if ((client!= null) && (client.isOpen())) {
 					logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName());
 //					count = socketRead(client, total, HEADER_LENGTH - total);	//20200514	自己寫的method	//header這裡就會有值
 					count = socketRead(client);
 					this.buffer = new byte[WitnessReceiver.HEADER_LENGTH];
 //					WitnessReceiver.header.get(this.buffer, 0 , WitnessReceiver.HEADER_LENGTH);
+					logger.info("count is : " + count );
 					if (count >= 0) {
 						total = total + count;
-						WitnessReceiver.header.get(this.buffer, 0 , WitnessReceiver.HEADER_LENGTH);
+						try {
+//							this.header.get(this.buffer, 0 , WitnessReceiver.HEADER_LENGTH);
+							this.header.get(this.buffer);
+							logger.info("Received from client: " + new String(this.buffer).trim());
+						} catch (Exception e) {
+							logger.info("e is : " + e );
+							command = new Command(this.buffer);
+							command.unknownCommand(client);
+						}
 					}
 					else
 					{
@@ -112,6 +122,7 @@ public class WitnessReceiver extends Thread {
 					if (!magic.equals(MAGIC))			//20200514 "WITNESS ";
 					{
 						logger.info("magic dismatch");
+						logger.info("magic is " + magic);
 						logger.info(header);
 						/*we needs handle remaining here*/
 						command = new Command(this.buffer);
@@ -189,7 +200,7 @@ public class WitnessReceiver extends Thread {
 	
 	private synchronized int socketRead(AsynchronousSocketChannel socketclient) throws InterruptedException, IOException
 	{
-		return this.socketRead(socketclient, header);
+		return this.socketRead(socketclient, this.header);
 	}
 	
 	private synchronized int socketRead(AsynchronousSocketChannel socketclient, ByteBuffer buffer) throws InterruptedException, IOException
@@ -198,20 +209,23 @@ public class WitnessReceiver extends Thread {
 		int readCount = 0;
 //		while (offset + readCount < length)
 //		{
-			Future<Integer> readval = socketclient.read(buffer);
-			try {
-				readCount = readval.get();
-				logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
-						" readCount: " + readCount);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-//			logger.info("Received from client: " + new String(buffer.array()).trim());
-			buffer.flip();
+//		buffer.flip();
+		buffer.clear();
+		Future<Integer> readval = socketclient.read(buffer);
+//		buffer.flip();
+		try {
+			readCount = readval.get();
+			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
+					" readCount: " + readCount);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		logger.info("Received from client: " + new String(buffer.array()).trim());
+//			buffer.flip();
 //			readCount = socketReader.read(buffer, offset, length);
 //			try {
 //				readCount = readval.get();
