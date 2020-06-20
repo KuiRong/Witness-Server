@@ -7,6 +7,16 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousChannelGroup;
+import java.nio.channels.AsynchronousServerSocketChannel;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -17,11 +27,16 @@ public class CServer extends Thread{
 
 	private int port;
 	private Boolean isRunning = false;
-	private ServerSocket globalServerSocket;
+//	private ServerSocket globalServerSocket;
+//	private  Future<AsynchronousSocketChannel> globalServerSocket;
+	private  AsynchronousServerSocketChannel globalServerSocket;
+	private  AsynchronousSocketChannel client = null;
 //	private CUpDateByHand globalUpDateTable;	//for change connect table by user
 	private HashSet<WitnessReceiver> serverReceiver;
 	private static Logger logger = Logger.getLogger(CServer.class);  
 
+	public static long nodeOneSendCount = 0;
+	public static long nodeTwoSendCount = 0;
 	
 	static HashMap<String, CSetInfo> nodeInfo = new HashMap<String, CSetInfo>();
 	static HashMap<String, Integer> applianceCount = new HashMap<String, Integer>();
@@ -125,7 +140,10 @@ public class CServer extends Thread{
 			{
 				if (!isRunning)
 				{
-					globalServerSocket = new ServerSocket(this.port);	//建一個socket物件
+//					globalServerSocket = new ServerSocket(this.port);	//建一個socket物件
+					globalServerSocket = AsynchronousServerSocketChannel.open();
+					globalServerSocket.bind(new InetSocketAddress("172.27.12.89", 8000));
+//					globalServerSocket.setSoTimeout(15000);
 					//20200601	這是測試用
 //					globalUpDateTable = new CUpDateByHand();
 //					globalUpDateTable.start();
@@ -140,22 +158,27 @@ public class CServer extends Thread{
 	}
 	
 	@Override
-	public void run()
+	public synchronized void run()
 	{
 		Socket socket;
+		ByteBuffer buffer = ByteBuffer.allocate(48);
 		try {
 			while (true)
 			{
 				logger.debug("receiving...");
-				socket = globalServerSocket.accept();	//20200513	監聽socket client端的請求
+		        Future<AsynchronousSocketChannel> acceptCon = globalServerSocket.accept();
+//				socket = globalServerSocket.accept();	//20200513	監聽socket client端的請求
 				logger.debug("accepted");
-				WitnessReceiver receiver = new WitnessReceiver(socket);		//20200513	有client請求就建一個名為reciver的WitnessReceiver物件
+				client = acceptCon.get();
+				WitnessReceiver receiver = new WitnessReceiver(client);		//20200513	有client請求就建一個名為reciver的WitnessReceiver物件
 				serverReceiver.add(receiver);	//20200513	可以看有幾個client
-				
+				logger.info("serverReceiver.keyset() is " + serverReceiver.toString());
 				receiver.start();	//20200514	WitnessRecevier.java run()
-			}
-			
-		} catch (IOException e) {
+			}	
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

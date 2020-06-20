@@ -3,9 +3,12 @@ package java_server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousSocketChannel;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.apache.log4j.Logger;
 
@@ -115,6 +118,24 @@ public class Command {
 		headerCrc = getCrc(header, WitnessReceiver.HEADER_LENGTH);
 		isDataVaild = headerCrc == crc;
 	}
+
+	public int response(AsynchronousSocketChannel client)
+	{
+		switch(op)
+		{
+			case WITNESS_OP_REQUIRE_LOCK_REQ:
+				logger.debug("[entry WITNESS_OP_REQUIRE_LOCK_REQ case]");
+			    return this.requireLock(client);
+			case WITNESS_OP_REQUIRE_UNLOCK_REQ:
+				logger.debug("[entry WITNESS_OP_REQUIRE_UNLOCK_REQ case]");
+				return this.requireUnLock(client);
+			case WITNESS_OP_HEARTBEAT_REQ:
+				logger.debug("[entry WITNESS_OP_HEARTBEAT_REQ case]");
+				return this.heartbeat(client);
+		}
+		
+		return this.unknownCommand(client);
+	}
 	
 	public int response(OutputStream bw)
 	{
@@ -134,8 +155,42 @@ public class Command {
 		return this.unknownCommand(bw);
 	}
 
+	private synchronized int requireUnLock(AsynchronousSocketChannel client) {
+		// TODO Auto-generated method stub
+		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
+		String nodeIdUnLockKey = Long.toString(nodeId);
+		Date now = new Date();
+		long objTimeout;
+		objTimeout = now.getTime() - CServer.nodeInfo.get(nodeIdUnLockKey).lastHeartBeat.getTime();
+		
+		logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+				"[requireUnLock] reqid : " + nodeId);
+		if(CServer.judgeDone == false) {
+			logger.info("unlock already");
+		}
+		else if(objTimeout > HEARTBEAT_TIMEDOUT) {
+			// unset this object data or ignore this object ==> ignore this object
+			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"Node " + CServer.nodeInfo.get(nodeIdUnLockKey).nodeId +"is failure.");
+		}
+		else if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdUnLockKey).lockOwner.split(":")[1])) {
+			CServer.nodeInfo.get(nodeIdUnLockKey).initLockOwner("false");
+			logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"Set nodeId "+ nodeId +" key(lockOwner) value to 'false'");
+			Opcode.updateTable();
+			Opcode.scanAllUnLockAlready();
+		}else {
+			logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"The key(lockOwner) of nodeId "+ nodeId +" value is 'false' already!");
+		}
+		
+		this.initBuffer(buf, WITNESS_OP_REQUIRE_UNLOCK_RSP);
+
+		return sendBuf(client, buf);
+	}
 	
-	private synchronized int requireUnLock(OutputStream bw) {
+//	private synchronized int requireUnLock(OutputStream bw) {
+	private int requireUnLock(OutputStream bw) {
 		// TODO Auto-generated method stub
 		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
 		String nodeIdUnLockKey = Long.toString(nodeId);
@@ -165,8 +220,35 @@ public class Command {
 		return sendBuf(bw, buf);
 	}
 
+	private synchronized int requireLock(AsynchronousSocketChannel client) {
+		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
+		String nodeIdKey = Long.toString(nodeId);
+
+		logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+				"[requireLock] reqid : " + nodeId);
+		
+		Opcode.scanLockAlready();
+		if(CServer.judgeDone) {										//20200525	必須要等到recover的request來才可以set成false,可能還要寫成table(file)
+			logger.info("already set lock");
+		}else {
+			logger.info("judge appliance lock");		
+			Opcode.judge();			//multiple thread will entry need lock
+		}
+
+		this.initBuffer(buf, WITNESS_OP_REQUIRE_LOCK_RSP);
+		logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+				"nodeIdKey is " + nodeIdKey);
+//		logger.info("Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(\":\")[1]) is " + Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1]));
+		if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1])) {	//20200521 好像沒有送出去 ==> 20200525 送了
+			System.arraycopy(toByteArray(1), 0, buf, 8, 2);
+		}
+		
+		return sendBuf(client, buf);
+	}
+	
 	//20200522	4個node  4 個 thread 都會來要lock
-	private synchronized int requireLock(OutputStream bw) {			//20200521 用這個準沒錯
+//	private synchronized int requireLock(OutputStream bw) {			//20200521 用這個準沒錯
+	private int requireLock(OutputStream bw) {
 		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
 		String nodeIdKey = Long.toString(nodeId);
 
@@ -190,7 +272,18 @@ public class Command {
 		return sendBuf(bw, buf);
 	}
 	
-	public synchronized int heartbeat(OutputStream bw)
+	public int heartbeat(AsynchronousSocketChannel client)
+	{
+		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];		//Create buffer 長度48
+		this.initBuffer(buf, WITNESS_OP_HEARTBEAT_RSP);
+//		System.arraycopy(Command.toByteArray(WITNESS_STATUS_SUCCESS), 0, buf, 40, 4);
+		// 已上 init 完 buffer
+		Opcode.heartBeat(applianceId, nodeId, Master, lockOwner);
+		return sendBuf(client, buf);
+	}
+	
+//	public synchronized int heartbeat(OutputStream bw)
+	public int heartbeat(OutputStream bw)
 	{
 		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];		//Create buffer 長度48
 		this.initBuffer(buf, WITNESS_OP_HEARTBEAT_RSP);
@@ -198,6 +291,14 @@ public class Command {
 		// 已上 init 完 buffer
 		Opcode.heartBeat(applianceId, nodeId, Master, lockOwner);
 		return sendBuf(bw, buf);
+	}
+
+	public int unknownCommand(AsynchronousSocketChannel client)
+	{
+		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
+		this.initBuffer(buf, WITNESS_OP_NOT_DEF);
+		System.arraycopy(Command.toByteArray(WITNESS_STATUS_ERROR), 0, buf, 40, 4);
+		return sendBuf(client, buf);
 	}
 	
 	public int unknownCommand(OutputStream bw)
@@ -215,18 +316,77 @@ public class Command {
 //		return sendBuf(bw, buf);
 //	}
 
-	private synchronized int sendBuf(OutputStream bw, byte[] buf)
+	public static void printByte(byte[] data)
+	{
+		for (int i = 0; i < data.length; i++)
+		{
+			if (i%8 == 0)
+				System.out.println("");
+			System.out.print(String.format("%02x", data[i]));
+		}
+		System.out.println("");
+	}
+	
+	private synchronized int sendBuf(AsynchronousSocketChannel client, byte[] buf)
+	{
+		int crc = getCrc(buf, WitnessReceiver.HEADER_LENGTH);
+		
+		System.arraycopy(toByteArray(crc), 0, buf, 10, 2);
+		
+//			for (int i = 40; i < 42; i++) {
+//				logger.info(String.format("%02x", buf[i]));
+//			}
+		ByteBuffer buffer = ByteBuffer.wrap(buf);
+		
+		Future<Integer> writeVal = client.write(buffer);
+//			for (byte b : buf)
+//				bw.write(b);
+//			bw.flush();
+		try {
+			writeVal.get();
+		} catch (InterruptedException | ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		buffer.clear();
+		WitnessReceiver.header.clear();
+		if (nodeId == 1111) {
+//				logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
+			CServer.nodeOneSendCount++;
+			logger.info(String.format("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"[Node 1111] Send Count = %d", CServer.nodeOneSendCount));
+		}else if (nodeId == 3333) {
+			CServer.nodeTwoSendCount++;
+			logger.info(String.format("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"[Node 3333] Send Count = %d", CServer.nodeTwoSendCount));
+		}
+		return 0;
+	}
+	
+	//	private synchronized int sendBuf(OutputStream bw, byte[] buf)
+	private int sendBuf(OutputStream bw, byte[] buf)
 	{
 		try {
 			int crc = getCrc(buf, WitnessReceiver.HEADER_LENGTH);
 			
 			System.arraycopy(toByteArray(crc), 0, buf, 10, 2);
 			
-//			printByte(buf);
-			
+//			for (int i = 40; i < 42; i++) {
+//				logger.info(String.format("%02x", buf[i]));
+//			}
+
 			for (byte b : buf)
 				bw.write(b);
 			bw.flush();
+			
+			if (nodeId == 1111) {
+//				logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
+				CServer.nodeOneSendCount++;
+				logger.info(String.format("[Node 1111] Send Count = %d", CServer.nodeOneSendCount));
+			}else if (nodeId == 3333) {
+				CServer.nodeTwoSendCount++;
+				logger.info(String.format("[Node 3333] Send Count = %d", CServer.nodeTwoSendCount));
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -235,7 +395,8 @@ public class Command {
 		return 0;
 	}
 	
-	private synchronized void initBuffer(byte[] buf, short opcod)
+//	private synchronized void initBuffer(byte[] buf, short opcod)
+	private void initBuffer(byte[] buf, short opcod)
 	{	//20200520	buffer init 的過程是使用大小計算
 		short crc = 0;
 		short status = 0;
@@ -255,26 +416,33 @@ public class Command {
 //		System.out.println("nodeId is "+ nodeId);
 //		logger.info("Node: " + CServer.nodeInfo.get(String.valueOf(nodeId))+ " opecode is: " + opcod);
 		if(opcod == WITNESS_OP_REQUIRE_UNLOCK_RSP) {
-			logger.info("[REQUIRE_UNLOCK_RSP]========================");
-			logger.info("[REQUIRE_UNLOCK_RSP] nodeId is "+ nodeId);
+			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
+					" [REQUIRE_UNLOCK_RSP]========================");
+			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"[REQUIRE_UNLOCK_RSP] nodeId is "+ nodeId);
 			logger.info("\n");
 			status = 5;
 		}else if(opcod == WITNESS_OP_REQUIRE_LOCK_RSP) {
-			logger.info("[REQUIRE_LOCK_RSP]========================");
+			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					"[REQUIRE_LOCK_RSP]========================");
 			if(CServer.nodeInfo.get(String.valueOf(nodeId)).lockOwner.equals("lockOwner:true")) {	//20200525	跟master同一個AP的node也會拿到lock
-				logger.info("[REQUIRE_LOCK_RSP] nodeId is "+ nodeId);
+				logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+						"[REQUIRE_LOCK_RSP] nodeId is "+ nodeId);
 				logger.info("\n");
 				System.arraycopy(toByteArray(1), 0, buf, 8, 2);
 			}
 			status = 4;
 		}else if(opcod == WITNESS_OP_HEARTBEAT_RSP) {
-//			logger.info("[HEARTBEAT_RSP]========================");
 			if(CServer.nodeInfo.get(String.valueOf(nodeId)).lockOwner.equals("lockOwner:true")) {	//20200525	跟master同一個AP的node也會拿到lock
-//				logger.info("[HEARTBEAT_RSP] nodeId is "+ nodeId);
 			}
-//			logger.info("[HEARTBEAT_RSP] set status = 3");
 			status = 3;
 		}
+//		byte[] bytess = ByteBuffer.allocate(2).putShort(status).array();
+//
+//		for (byte b : bytess) {
+//		   System.out.format("\n%02x\n", b);
+//		}
+
 		System.arraycopy(toByteArray(status), 0, buf, 40, 2);
 	}
 

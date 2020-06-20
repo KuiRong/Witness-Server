@@ -14,7 +14,7 @@ public class Opcode {
 	private static Logger logger = Logger.getLogger(Opcode.class);
 	public static final long HEARTBEAT_TIMEDOUT = 10000;
 			
-	public static void heartBeat(Long ApplianceId, Long nodeId, Short master,short lockOwner) {
+	public static synchronized void heartBeat(Long ApplianceId, Long nodeId, Short master,short lockOwner) {
 		boolean Master = false;
 		if(master == 1) {
 			Master = true;
@@ -52,7 +52,7 @@ public class Opcode {
 		logger.debug("Table update done!");
 	}
 	
-	public static void scanAllUnLockAlready() {
+	public synchronized static void scanAllUnLockAlready() {
 		// TODO Auto-generated method stub
 		Iterator<String> scanIt = CServer.nodeInfo.keySet().iterator();
 		while (scanIt.hasNext()) {
@@ -68,7 +68,7 @@ public class Opcode {
 		}
 	}
 	
-	public static void scanLockAlready(){
+	public synchronized static void scanLockAlready(){
 		Iterator<String> scanIt = CServer.nodeInfo.keySet().iterator();
 		if(!CServer.judgeDone) {
 			while (scanIt.hasNext()) {
@@ -82,7 +82,7 @@ public class Opcode {
 		}
 	}
 	
-	public static void judge(){
+	public static synchronized void judge(){
 		Iterator<String> it = CServer.nodeInfo.keySet().iterator();
 		Date now = new Date();
 		int apCount = 0;
@@ -145,7 +145,7 @@ public class Opcode {
 		}
 	}
 	
-	public static void setLockToNodeInfo(String ApRequireLock){
+	public static synchronized void setLockToNodeInfo(String ApRequireLock){
 		Iterator<String> iter = CServer.nodeInfo.keySet().iterator();
 		Date now = new Date();
 		long objTimeout;
@@ -167,7 +167,7 @@ public class Opcode {
 		CServer.applianceCount.clear();
 	}
 	
-	public static void updateTable(){
+	public synchronized static void updateTable(){
 		try
 		{
 			File gluster= new File("./gluster.txt");
