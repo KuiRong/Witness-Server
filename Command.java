@@ -10,10 +10,10 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.apache.log4j.Logger;
+// import org.apache.log4j.// logger;
 
 public class Command {
-	private static Logger logger = Logger.getLogger(Command.class);
+	// private static // logger // logger = // logger.get// logger(Command.class);
 	/*Witness OP code*/
 	public static final short WITNESS_OP_NOT_DEF		         = 0x00;
 	public static final short WITNESS_OP_GET_VER_REQ			 = 0x10;
@@ -105,7 +105,7 @@ public class Command {
 		this.data = new byte[0];
 		
 		lockOwner = getShort(Arrays.copyOfRange(tmp, 8, 10));
-		crc = getShortCRC(Arrays.copyOfRange(tmp, 10, 12));			//20200514 複製10~11
+		crc = getShortCRC(Arrays.copyOfRange(tmp, 10, 12));			//20200514 嚙複製10~11
 		op = getShort(Arrays.copyOfRange(tmp, 12, 14));
 		length = getShort(Arrays.copyOfRange(tmp, 14, 16));
 		applianceId = getLong(Arrays.copyOfRange(tmp, 16, 24));
@@ -124,13 +124,13 @@ public class Command {
 		switch(op)
 		{
 			case WITNESS_OP_REQUIRE_LOCK_REQ:
-				logger.debug("[entry WITNESS_OP_REQUIRE_LOCK_REQ case]");
+				// logger.debug("[entry WITNESS_OP_REQUIRE_LOCK_REQ case]");
 			    return this.requireLock(client);
 			case WITNESS_OP_REQUIRE_UNLOCK_REQ:
-				logger.debug("[entry WITNESS_OP_REQUIRE_UNLOCK_REQ case]");
+				// logger.debug("[entry WITNESS_OP_REQUIRE_UNLOCK_REQ case]");
 				return this.requireUnLock(client);
 			case WITNESS_OP_HEARTBEAT_REQ:
-				logger.debug("[entry WITNESS_OP_HEARTBEAT_REQ case]");
+				// logger.debug("[entry WITNESS_OP_HEARTBEAT_REQ case]");
 				return this.heartbeat(client);
 		}
 		
@@ -142,13 +142,13 @@ public class Command {
 		switch(op)
 		{
 			case WITNESS_OP_REQUIRE_LOCK_REQ:
-				logger.debug("entry WITNESS_OP_REQUIRE_LOCK_REQ case");
+				// logger.debug("entry WITNESS_OP_REQUIRE_LOCK_REQ case");
 			    return this.requireLock(bw);
 			case WITNESS_OP_REQUIRE_UNLOCK_REQ:
-				logger.debug("entry WITNESS_OP_REQUIRE_UNLOCK_REQ case");
+				// logger.debug("entry WITNESS_OP_REQUIRE_UNLOCK_REQ case");
 				return this.requireUnLock(bw);
 			case WITNESS_OP_HEARTBEAT_REQ:
-				logger.debug("entry WITNESS_OP_HEARTBEAT_REQ case");
+				// logger.debug("entry WITNESS_OP_HEARTBEAT_REQ case");
 				return this.heartbeat(bw);
 		}
 		
@@ -163,25 +163,25 @@ public class Command {
 		long objTimeout;
 		objTimeout = now.getTime() - CServer.nodeInfo.get(nodeIdUnLockKey).lastHeartBeat.getTime();
 		
-		logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-				"[requireUnLock] reqid : " + nodeId);
+		// logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+				// "[requireUnLock] reqid : " + nodeId);
 		if(CServer.judgeDone == false) {
-			logger.info("unlock already");
+			// logger.info("unlock already");
 		}
 		else if(objTimeout > HEARTBEAT_TIMEDOUT) {
 			// unset this object data or ignore this object ==> ignore this object
-			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"Node " + CServer.nodeInfo.get(nodeIdUnLockKey).nodeId +"is failure.");
+			// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "Node " + CServer.nodeInfo.get(nodeIdUnLockKey).nodeId +"is failure.");
 		}
 		else if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdUnLockKey).lockOwner.split(":")[1])) {
 			CServer.nodeInfo.get(nodeIdUnLockKey).initLockOwner("false");
-			logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"Set nodeId "+ nodeId +" key(lockOwner) value to 'false'");
+			// logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "Set nodeId "+ nodeId +" key(lockOwner) value to 'false'");
 			Opcode.updateTable();
 			Opcode.scanAllUnLockAlready();
 		}else {
-			logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"The key(lockOwner) of nodeId "+ nodeId +" value is 'false' already!");
+			// logger.debug("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "The key(lockOwner) of nodeId "+ nodeId +" value is 'false' already!");
 		}
 		
 		this.initBuffer(buf, WITNESS_OP_REQUIRE_UNLOCK_RSP);
@@ -198,21 +198,21 @@ public class Command {
 		long objTimeout;
 		objTimeout = now.getTime() - CServer.nodeInfo.get(nodeIdUnLockKey).lastHeartBeat.getTime();
 		
-		logger.debug("[requireUnLock] reqid : " + nodeId);
+		// logger.debug("[requireUnLock] reqid : " + nodeId);
 		if(CServer.judgeDone == false) {
-			logger.info("unlock already");
+			// logger.info("unlock already");
 		}
 		else if(objTimeout > HEARTBEAT_TIMEDOUT) {
 			// unset this object data or ignore this object ==> ignore this object
-			logger.info("Node " + CServer.nodeInfo.get(nodeIdUnLockKey).nodeId +"is failure.");
+			// logger.info("Node " + CServer.nodeInfo.get(nodeIdUnLockKey).nodeId +"is failure.");
 		}
 		else if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdUnLockKey).lockOwner.split(":")[1])) {
 			CServer.nodeInfo.get(nodeIdUnLockKey).initLockOwner("false");
-			logger.debug("Set nodeId "+ nodeId +" key(lockOwner) value to 'false'");
+			// logger.debug("Set nodeId "+ nodeId +" key(lockOwner) value to 'false'");
 			Opcode.updateTable();
 			Opcode.scanAllUnLockAlready();
 		}else {
-			logger.debug("The key(lockOwner) of nodeId "+ nodeId +" value is 'false' already!");
+			// logger.debug("The key(lockOwner) of nodeId "+ nodeId +" value is 'false' already!");
 		}
 		
 		this.initBuffer(buf, WITNESS_OP_REQUIRE_UNLOCK_RSP);
@@ -224,48 +224,48 @@ public class Command {
 		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
 		String nodeIdKey = Long.toString(nodeId);
 
-		logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-				"[requireLock] reqid : " + nodeId);
+		// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+				// "[requireLock] reqid : " + nodeId);
 		
 		Opcode.scanLockAlready();
-		if(CServer.judgeDone) {										//20200525	必須要等到recover的request來才可以set成false,可能還要寫成table(file)
-			logger.info("already set lock");
+		if(CServer.judgeDone) {
+			// logger.info("already set lock");
 		}else {
-			logger.info("judge appliance lock");		
+			// logger.info("judge appliance lock");		
 			Opcode.judge();			//multiple thread will entry need lock
 		}
 
 		this.initBuffer(buf, WITNESS_OP_REQUIRE_LOCK_RSP);
-		logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-				"nodeIdKey is " + nodeIdKey);
-//		logger.info("Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(\":\")[1]) is " + Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1]));
-		if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1])) {	//20200521 好像沒有送出去 ==> 20200525 送了
+		// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+				// "nodeIdKey is " + nodeIdKey);
+//		// logger.info("Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(\":\")[1]) is " + Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1]));
+		if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1])) {
 			System.arraycopy(toByteArray(1), 0, buf, 8, 2);
 		}
 		
 		return sendBuf(client, buf);
 	}
 	
-	//20200522	4個node  4 個 thread 都會來要lock
-//	private synchronized int requireLock(OutputStream bw) {			//20200521 用這個準沒錯
+
+//	private synchronized int requireLock(OutputStream bw) {
 	private int requireLock(OutputStream bw) {
 		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
 		String nodeIdKey = Long.toString(nodeId);
 
-		logger.info("[requireLock] reqid : " + nodeId);
+		// logger.info("[requireLock] reqid : " + nodeId);
 		
 		Opcode.scanLockAlready();
-		if(CServer.judgeDone) {										//20200525	必須要等到recover的request來才可以set成false,可能還要寫成table(file)
-			logger.info("already set lock");
+		if(CServer.judgeDone) {
+			// logger.info("already set lock");
 		}else {
-			logger.info("judge appliance lock");		
+			// logger.info("judge appliance lock");		
 			Opcode.judge();			//multiple thread will entry need lock
 		}
 
 		this.initBuffer(buf, WITNESS_OP_REQUIRE_LOCK_RSP);
-		logger.info("nodeIdKey is " + nodeIdKey);
-		logger.info("Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(\":\")[1]) is " + Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1]));
-		if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1])) {	//20200521 好像沒有送出去 ==> 20200525 送了
+		// logger.info("nodeIdKey is " + nodeIdKey);
+		// logger.info("Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(\":\")[1]) is " + Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1]));
+		if(Boolean.valueOf(CServer.nodeInfo.get(nodeIdKey).lockOwner.split(":")[1])) {
 			System.arraycopy(toByteArray(1), 0, buf, 8, 2);
 		}
 		
@@ -274,10 +274,10 @@ public class Command {
 	
 	public int heartbeat(AsynchronousSocketChannel client)
 	{
-		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];		//Create buffer 長度48
+		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];
 		this.initBuffer(buf, WITNESS_OP_HEARTBEAT_RSP);
 //		System.arraycopy(Command.toByteArray(WITNESS_STATUS_SUCCESS), 0, buf, 40, 4);
-		// 已上 init 完 buffer
+
 		Opcode.heartBeat(applianceId, nodeId, Master, lockOwner);
 		return sendBuf(client, buf);
 	}
@@ -285,10 +285,9 @@ public class Command {
 //	public synchronized int heartbeat(OutputStream bw)
 	public int heartbeat(OutputStream bw)
 	{
-		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];		//Create buffer 長度48
+		byte[] buf = new byte[WitnessReceiver.HEADER_LENGTH];		//Create buffer 嚙踝蕭嚙踝蕭48
 		this.initBuffer(buf, WITNESS_OP_HEARTBEAT_RSP);
 //		System.arraycopy(Command.toByteArray(WITNESS_STATUS_SUCCESS), 0, buf, 40, 4);
-		// 已上 init 完 buffer
 		Opcode.heartBeat(applianceId, nodeId, Master, lockOwner);
 		return sendBuf(bw, buf);
 	}
@@ -334,7 +333,7 @@ public class Command {
 		System.arraycopy(toByteArray(crc), 0, buf, 10, 2);
 		
 //			for (int i = 40; i < 42; i++) {
-//				logger.info(String.format("%02x", buf[i]));
+//				// logger.info(String.format("%02x", buf[i]));
 //			}
 		ByteBuffer buffer = ByteBuffer.wrap(buf);
 		
@@ -352,14 +351,14 @@ public class Command {
 		buffer.clear();
 		
 		if (nodeId == 1111) {
-//				logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
+//				// logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
 			CServer.nodeOneSendCount++;
-			logger.info(String.format("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"[Node 1111] Send Count = %d", CServer.nodeOneSendCount));
+			// logger.info(String.format("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "[Node 1111] Send Count = %d", CServer.nodeOneSendCount));
 		}else if (nodeId == 3333) {
 			CServer.nodeTwoSendCount++;
-			logger.info(String.format("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"[Node 3333] Send Count = %d", CServer.nodeTwoSendCount));
+			// logger.info(String.format("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "[Node 3333] Send Count = %d", CServer.nodeTwoSendCount));
 		}
 		return 0;
 	}
@@ -373,7 +372,7 @@ public class Command {
 			System.arraycopy(toByteArray(crc), 0, buf, 10, 2);
 			
 //			for (int i = 40; i < 42; i++) {
-//				logger.info(String.format("%02x", buf[i]));
+//				// logger.info(String.format("%02x", buf[i]));
 //			}
 
 			for (byte b : buf)
@@ -381,12 +380,12 @@ public class Command {
 			bw.flush();
 			
 			if (nodeId == 1111) {
-//				logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
+//				// logger.info(String.format("[sendBuf] buf to nodeId %d length is %d", nodeId, buf.length));
 				CServer.nodeOneSendCount++;
-				logger.info(String.format("[Node 1111] Send Count = %d", CServer.nodeOneSendCount));
+				// logger.info(String.format("[Node 1111] Send Count = %d", CServer.nodeOneSendCount));
 			}else if (nodeId == 3333) {
 				CServer.nodeTwoSendCount++;
-				logger.info(String.format("[Node 3333] Send Count = %d", CServer.nodeTwoSendCount));
+				// logger.info(String.format("[Node 3333] Send Count = %d", CServer.nodeTwoSendCount));
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -398,12 +397,10 @@ public class Command {
 	
 //	private synchronized void initBuffer(byte[] buf, short opcod)
 	private void initBuffer(byte[] buf, short opcod)
-	{	//20200520	buffer init 的過程是使用大小計算
+	{
 		short crc = 0;
 		short status = 0;
-		// 20200514	System.arraycopy(來源, 起始索引, 目的, 起始索引, 複製長度)
-		// 20200514	getBytes()將字串轉成byte ==> 將結果存入新的 byte array中
-		// 20200514	WitnessReceiver.MAGIC.length() 長度是8
+
 		System.arraycopy(WitnessReceiver.WITNESS_MAGIC.getBytes(), 0, buf, 0, WitnessReceiver.MAGIC.length());
 		System.arraycopy(toByteArray(lockOwner), 0, buf, 8, 2);
 
@@ -412,29 +409,29 @@ public class Command {
 		System.arraycopy(toByteArray(applianceId), 0, buf, 16, 8);
 		System.arraycopy(toByteArray(nodeId), 0, buf, 24, 8);
 		System.arraycopy(WitnessReceiver.WITNESS_MAGIC.getBytes(), 0, buf, 32, 8);
-//		logger.info("[initBuffer]========================");
-//		logger.info("CServer.nodeInfo.keySet() is ==> " + CServer.nodeInfo.keySet()); //[1111,2222,3333,4444]
+//		// logger.info("[initBuffer]========================");
+//		// logger.info("CServer.nodeInfo.keySet() is ==> " + CServer.nodeInfo.keySet()); //[1111,2222,3333,4444]
 //		System.out.println("nodeId is "+ nodeId);
-//		logger.info("Node: " + CServer.nodeInfo.get(String.valueOf(nodeId))+ " opecode is: " + opcod);
+//		// logger.info("Node: " + CServer.nodeInfo.get(String.valueOf(nodeId))+ " opecode is: " + opcod);
 		if(opcod == WITNESS_OP_REQUIRE_UNLOCK_RSP) {
-			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
-					" [REQUIRE_UNLOCK_RSP]========================");
-			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"[REQUIRE_UNLOCK_RSP] nodeId is "+ nodeId);
-			logger.info("\n");
+			// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
+					// " [REQUIRE_UNLOCK_RSP]========================");
+			// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "[REQUIRE_UNLOCK_RSP] nodeId is "+ nodeId);
+			// logger.info("\n");
 			status = 5;
 		}else if(opcod == WITNESS_OP_REQUIRE_LOCK_RSP) {
-			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-					"[REQUIRE_LOCK_RSP]========================");
-			if(CServer.nodeInfo.get(String.valueOf(nodeId)).lockOwner.equals("lockOwner:true")) {	//20200525	跟master同一個AP的node也會拿到lock
-				logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-						"[REQUIRE_LOCK_RSP] nodeId is "+ nodeId);
-				logger.info("\n");
+			// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// "[REQUIRE_LOCK_RSP]========================");
+			if(CServer.nodeInfo.get(String.valueOf(nodeId)).lockOwner.equals("lockOwner:true")) {
+				// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+						// "[REQUIRE_LOCK_RSP] nodeId is "+ nodeId);
+				// logger.info("\n");
 				System.arraycopy(toByteArray(1), 0, buf, 8, 2);
 			}
 			status = 4;
 		}else if(opcod == WITNESS_OP_HEARTBEAT_RSP) {
-			if(CServer.nodeInfo.get(String.valueOf(nodeId)).lockOwner.equals("lockOwner:true")) {	//20200525	跟master同一個AP的node也會拿到lock
+			if(CServer.nodeInfo.get(String.valueOf(nodeId)).lockOwner.equals("lockOwner:true")) {
 			}
 			status = 3;
 		}
@@ -447,7 +444,6 @@ public class Command {
 		System.arraycopy(toByteArray(status), 0, buf, 40, 2);
 	}
 
-//	toByteArray 多載
 	
 	public static byte[] toByteArray(short num)
 	{
@@ -538,7 +534,6 @@ public class Command {
 		return ret;
 	}
 	
-//	CRC多載
 	public static int getCrc(byte[] header, int headerLength)
 	{
 		int crc = 0x0000;

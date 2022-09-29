@@ -2,10 +2,10 @@ package java_server;
 
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+// import org.apache.log4j.// // logger;
 
 public class CSetInfo {
-	private static Logger logger = Logger.getLogger(CSetInfo.class);
+	// private static // // logger // // logger = // // logger.get// // logger(CSetInfo.class);
 	String nodeId;
 	String apId;
 	String master;
@@ -26,7 +26,7 @@ public class CSetInfo {
 		if(this.lastHeartBeat == null) {
 			this.lastHeartBeat = new Date();
 		}else {
-			logger.debug("this.lastHeartBeat will do nothing");
+			// // logger.debug("this.lastHeartBeat will do nothing");
 		}
 		this.lockOwner = "lockOwner:" + lkOwner;		
 	}
@@ -40,14 +40,13 @@ public class CSetInfo {
 		this.master = "master:" + master;
 	}
 	public void setLastHeartBeat() {
-		this.lastHeartBeat = null;			//20200522	release memory
+		this.lastHeartBeat = null;
 		this.lastHeartBeat = new Date();
 	}
 	public void initLockOwner(String lkOwner) {
 		this.lockOwner = "lockOwner:" + lkOwner;
 	}
 	
-//	Ãþ§O¨ç¦¡
 	public static void setData(String nId, CSetInfo info) {
 		CServer.nodeInfo.put(nId, info);
 	}

@@ -1,6 +1,6 @@
 package java_server;
 
-import org.apache.log4j.Logger;
+// import org.apache.log4j.Logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,7 +33,7 @@ public class CServer extends Thread{
 	private  AsynchronousSocketChannel client = null;
 //	private CUpDateByHand globalUpDateTable;	//for change connect table by user
 	private HashSet<WitnessReceiver> serverReceiver;
-	private static Logger logger = Logger.getLogger(CServer.class);  
+	// private static Logger logger = Logger.getLogger(CServer.class);  
 
 	public static long nodeOneSendCount = 0;
 	public static long nodeTwoSendCount = 0;
@@ -45,7 +45,7 @@ public class CServer extends Thread{
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		CServer server = new CServer(8000);	//20200513	建一個名為w的Witness的物件
+		CServer server = new CServer(8000);
 		server.init();
 		server.runServerThread();
 
@@ -62,7 +62,7 @@ public class CServer extends Thread{
 	
 	public void init()
 	{
-		this.serverReceiver = new HashSet<WitnessReceiver>();	//20200513	建一個存WitnessReceiver物件的hashset
+		this.serverReceiver = new HashSet<WitnessReceiver>();
 		try {
 			this.initWitness();
 		} catch (FileNotFoundException e) {
@@ -81,45 +81,45 @@ public class CServer extends Thread{
 
 		CSetInfo lastInfo;
 
-		logger.debug("initWitness()");
+		// logger.debug("initWitness()");
 		if (!witnessTable.exists()) {
 			try {
 				witnessTable.createNewFile();
-				logger.debug("Table not exist, create connect table file!");
+				// logger.debug("Table not exist, create connect table file!");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				logger.info("Create connect table failed!");
+				// logger.info("Create connect table failed!");
 			}
 		}else{
-			logger.debug("Connect table file exist!");
+			// logger.debug("Connect table file exist!");
 			FileReader fileReader = new FileReader(witnessTable);
 			BufferedReader bufferReader = new BufferedReader(fileReader);
 			String readLine;
 			try {
 				while((readLine = bufferReader.readLine()) != null)
 				{
-					readLine = readLine.trim();	//trim() 會將開頭跟結尾的空格省略
+					readLine = readLine.trim();
 					String[] array = readLine.split(" ");
-					logger.debug("array.length is = " + array.length);		//array.length 剛開始會等於1 ==> 需要過濾
+					// logger.debug("array.length is = " + array.length);
 					int fileExist = array.length;
 					if (fileExist != 0 && fileExist != 1)
 					{
 						nodeId = Long.parseLong(array[0].split(":")[1]); //gluster_id :123 ==>line.split(" :")[1]) = 123
-						logger.debug("nodeId : " + nodeId);
+						// logger.debug("nodeId : " + nodeId);
 						ApId = Long.parseLong(array[1].split(":")[1]);
-						logger.debug("ApId : " + ApId);
+						// logger.debug("ApId : " + ApId);
 						master = array[2].split(":")[1];
-						logger.debug("master :" + master);
+						// logger.debug("master :" + master);
 						lockOwner = array[3].split(":")[1];
-						logger.debug("lockOwner :" + lockOwner);
+						// logger.debug("lockOwner :" + lockOwner);
 						lastInfo = new CSetInfo(Long.toString(ApId), Long.toString(nodeId), master, lockOwner);
-						CSetInfo.setData(Long.toString(nodeId), lastInfo);	//類別函式可以用
+						CSetInfo.setData(Long.toString(nodeId), lastInfo);
 					}
 				}
 				
 			bufferReader.close();
-			logger.debug("Connect table entry size : "+ nodeInfo.size() + ", lastInfo update already done!");
+			// logger.debug("Connect table entry size : "+ nodeInfo.size() + ", lastInfo update already done!");
 			} catch (FileNotFoundException e) {
 					// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -140,20 +140,20 @@ public class CServer extends Thread{
 			{
 				if (!isRunning)
 				{
-//					globalServerSocket = new ServerSocket(this.port);	//建一個socket物件
+//					globalServerSocket = new ServerSocket(this.port);
 					globalServerSocket = AsynchronousServerSocketChannel.open();
 					globalServerSocket.bind(new InetSocketAddress("172.27.12.89", 8000));
 //					globalServerSocket.setSoTimeout(15000);
-					//20200601	這是測試用
+					//20200601	嚙緻嚙瞌嚙踝蕭嚙調伐蕭
 //					globalUpDateTable = new CUpDateByHand();
 //					globalUpDateTable.start();
-					this.start();	//20200513	執行run
+					this.start();
 					
 					isRunning = true;
 				}
-			}	//一次只會run一個socket thread
+			}
 		} catch (IOException e) {
-			logger.debug(e);
+			// logger.debug(e);
 		}
 	}
 	
@@ -165,15 +165,15 @@ public class CServer extends Thread{
 		try {
 			while (true)
 			{
-				logger.debug("receiving...");
+				// logger.debug("receiving...");
 		        Future<AsynchronousSocketChannel> acceptCon = globalServerSocket.accept();
-//				socket = globalServerSocket.accept();	//20200513	監聽socket client端的請求
-				logger.debug("accepted");
+//				socket = globalServerSocket.accept();
+				// logger.debug("accepted");
 				client = acceptCon.get();
-				WitnessReceiver receiver = new WitnessReceiver(client);		//20200513	有client請求就建一個名為reciver的WitnessReceiver物件
-				serverReceiver.add(receiver);	//20200513	可以看有幾個client
-				logger.info("serverReceiver.keyset() is " + serverReceiver.toString());
-				receiver.start();	//20200514	WitnessRecevier.java run()
+				WitnessReceiver receiver = new WitnessReceiver(client);
+				serverReceiver.add(receiver);
+				// logger.info("serverReceiver.keyset() is " + serverReceiver.toString());
+				receiver.start();
 			}	
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block

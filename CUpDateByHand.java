@@ -52,7 +52,7 @@ public class CUpDateByHand extends Thread{
 				try {
 					while((readLine = bufferReader.readLine()) != null)
 					{
-						readLine = readLine.trim();	//trim() 會將開頭跟結尾的空格省略
+						readLine = readLine.trim();
 						String[] array = readLine.split(" ");
 
 						int fileExist = array.length;
@@ -67,7 +67,7 @@ public class CUpDateByHand extends Thread{
 							lockOwner = array[3].split(":")[1];
 //							System.out.println("lockOwner :" + lockOwner);
 							lastInfo = new CSetInfo(Long.toString(ApId), Long.toString(nodeId), master, lockOwner, "test");
-							CSetInfo.setData(Long.toString(nodeId), lastInfo);	//類別函式可以用
+							CSetInfo.setData(Long.toString(nodeId), lastInfo);
 						}
 					}
 				

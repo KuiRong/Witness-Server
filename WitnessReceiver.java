@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.Future;
 
-import org.apache.log4j.Logger;
+// import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +17,7 @@ import java.io.OutputStream;
 
 public class WitnessReceiver extends Thread {
 	
-	private static Logger logger = Logger.getLogger(WitnessReceiver.class);
+	// private static Logger logger = Logger.getLogger(WitnessReceiver.class);
 	public static final String MAGIC = "WITNESS ";
 	public static final String WITNESS_MAGIC = "WTSERVER"; 
 	public static final int HEADER_LENGTH = 48;
@@ -47,7 +47,7 @@ public class WitnessReceiver extends Thread {
 	public WitnessReceiver(AsynchronousSocketChannel clientsocket)
 //	public WitnessReceiver(Socket socket)
 	{
-		this.header = ByteBuffer.allocate(48);	//20020513	長度48
+		this.header = ByteBuffer.allocate(48);
 		this.clientsocket = clientsocket;
 	}
 
@@ -78,20 +78,20 @@ public class WitnessReceiver extends Thread {
 			{
 				count = 0;
 				if ((client!= null) && (client.isOpen())) {
-					logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName());
-//					count = socketRead(client, total, HEADER_LENGTH - total);	//20200514	自己寫的method	//header這裡就會有值
+					// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName());
+//					count = socketRead(client, total, HEADER_LENGTH - total);
 					count = socketRead(client);
 					this.buffer = new byte[WitnessReceiver.HEADER_LENGTH];
 //					WitnessReceiver.header.get(this.buffer, 0 , WitnessReceiver.HEADER_LENGTH);
-					logger.info("count is : " + count );
+					// logger.info("count is : " + count );
 					if (count >= 0) {
 						total = total + count;
 						try {
 //							this.header.get(this.buffer, 0 , WitnessReceiver.HEADER_LENGTH);
 							this.header.get(this.buffer);
-							logger.info("Received from client: " + new String(this.buffer).trim());
+							// logger.info("Received from client: " + new String(this.buffer).trim());
 						} catch (Exception e) {
-							logger.info("e is : " + e );
+							// logger.info("e is : " + e );
 							command = new Command(this.buffer);
 							command.unknownCommand(client);
 						}
@@ -100,48 +100,48 @@ public class WitnessReceiver extends Thread {
 					{
 //						this.socket.close();
 //						logger.info("socket close");
-						logger.info("[socket close] count is " + count);
+						// logger.info("[socket close] count is " + count);
 						break;
 					}
-					logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
-							" receive " + count + " bytes. (it shoud be 48 bytes)");
+					// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() +
+					// 		" receive " + count + " bytes. (it shoud be 48 bytes)");
 					
 					if (total > 7)
 					{
-						magic = new String(this.buffer, 0, 8);		//20200514	從陣列header的0的位置起出長度8做為新的字串(magic)
-						logger.debug(magic);
+						magic = new String(this.buffer, 0, 8);
+						// logger.debug(magic);
 					}
 					
 					if (count == -1 || count == 0)
 						break;
 					
-					if (total != HEADER_LENGTH)				//20200514	讀到完為止
+					if (total != HEADER_LENGTH)
 						continue;
 
 					magic = new String(this.buffer, 0, 8);
-					if (!magic.equals(MAGIC))			//20200514 "WITNESS ";
+					if (!magic.equals(MAGIC))
 					{
-						logger.info("magic dismatch");
-						logger.info("magic is " + magic);
-						logger.info(header);
+						// logger.info("magic dismatch");
+						// logger.info("magic is " + magic);
+						// logger.info(header);
 						/*we needs handle remaining here*/
 						command = new Command(this.buffer);
 						command.unknownCommand(client);
 //						continue;
 					}
-					else			//20200514	清成0
+					else
 					{
 						total = 0;
 					}
 					total = 0;
 					command = new Command(this.buffer);
-					logger.debug("Entry Response");
+					// logger.debug("Entry Response");
 //					command.response(socketWriter);
 					command.response(client);
 				}
 			}
-//				count = socketRead(socketReader, total, HEADER_LENGTH - total);	//20200514	自己寫的method	//header這裡就會有值
-//				count = socketRead(client, total, HEADER_LENGTH - total);	//20200514	自己寫的method	//header這裡就會有值
+//				count = socketRead(socketReader, total, HEADER_LENGTH - total);
+//				count = socketRead(client, total, HEADER_LENGTH - total);
 //				if (count == -2) {
 //					testString = new String(header);
 //					logger.info("count = -2 and header is "+ testString);
@@ -159,26 +159,26 @@ public class WitnessReceiver extends Thread {
 //				
 //				if (total > 7)
 //				{
-//					magic = new String(header, 0, 8);		//20200514	從陣列header的0的位置起出長度8做為新的字串(magic)
+//					magic = new String(header, 0, 8);
 //					logger.debug(magic);
 //				}
 //				
 //				if (count == -1 || count == 0)
 //					break;
 //				
-//				if (total != HEADER_LENGTH)				//20200514	讀到完為止
+//				if (total != HEADER_LENGTH)
 //					continue;
 //
 //				magic = new String(header, 0, 8);
 //				
-//				if (!magic.equals(MAGIC))			//20200514 "WITNESS ";
+//				if (!magic.equals(MAGIC))
 //				{
 //					logger.info("magic dismatch");
 //					logger.info(header);
 //					/*we needs handle remaining here*/
 //					continue;
 //				}
-//				else			//20200514	清成0
+//				else
 //				{
 //					total = 0;
 //				}
@@ -215,8 +215,8 @@ public class WitnessReceiver extends Thread {
 //		buffer.flip();
 		try {
 			readCount = readval.get();
-			logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
-					" readCount: " + readCount);
+			// logger.info("[CURRENT THREAD] is " + Thread.currentThread().getName() + 
+			// 		" readCount: " + readCount);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -224,7 +224,7 @@ public class WitnessReceiver extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		logger.info("Received from client: " + new String(buffer.array()).trim());
+		// logger.info("Received from client: " + new String(buffer.array()).trim());
 //			buffer.flip();
 //			readCount = socketReader.read(buffer, offset, length);
 //			try {
@@ -250,15 +250,15 @@ public class WitnessReceiver extends Thread {
 		{
 //			try
 //			{
-			logger.info("[socketRead]readCount is " + readCount + ", offset is " + offset + ",length is " + length);
-			if (socketReader.available() <= 0)		//20200514	確保br2這個buffer有東西才read		回傳值-1等於斷線
+			// logger.info("[socketRead]readCount is " + readCount + ", offset is " + offset + ",length is " + length);
+			if (socketReader.available() <= 0)
 			{
-				logger.info("[socketRead]count is " + count);
+				// logger.info("[socketRead]count is " + count);
 				count++;
 				if (count == 5) {
 					return -2;
 				}
-				Thread.sleep(1000);			//buffer不太可能沒東西然後等十秒
+				Thread.sleep(1000);
 			}
 			readCount = socketReader.read(buffer, offset, length);
 //			} catch (InterruptedException e) {
